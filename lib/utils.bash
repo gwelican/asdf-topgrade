@@ -2,10 +2,9 @@
 
 set -euo pipefail
 
-# TODO: Ensure this is the correct GitHub homepage where releases can be downloaded for topgrade.
 GH_REPO="https://github.com/topgrade-rs/topgrade"
 TOOL_NAME="topgrade"
-TOOL_TEST="topgrade --help"
+TOOL_TEST="topgrade --version"
 
 fail() {
 	echo -e "asdf-$TOOL_NAME: $*"
@@ -14,7 +13,6 @@ fail() {
 
 curl_opts=(-fsSL)
 
-# NOTE: You might want to remove this if topgrade is not hosted on GitHub releases.
 if [ -n "${GITHUB_API_TOKEN:-}" ]; then
 	curl_opts=("${curl_opts[@]}" -H "Authorization: token $GITHUB_API_TOKEN")
 fi
@@ -31,8 +29,6 @@ list_github_tags() {
 }
 
 list_all_versions() {
-	# TODO: Adapt this. By default we simply list the tag names from GitHub releases.
-	# Change this function if topgrade has other means of determining installable versions.
 	list_github_tags
 }
 
@@ -41,8 +37,21 @@ download_release() {
 	version="$1"
 	filename="$2"
 
-	# TODO: Adapt the release URL convention for topgrade
-	url="$GH_REPO/archive/v${version}.tar.gz"
+	local platform
+	case "$OSTYPE" in
+		darwin*) platform="apple-darwin" ;;
+		linux*) platform="unknown-linux-musl" ;;
+		*) fail "Unsupported platform" ;;
+	esac
+
+	local architecture
+	case "$(uname -m)" in
+		x86_64) architecture="x86_64" ;;
+		arm64) architecture="x86_64" ;; # no arm64 build :(
+		*) fail "Unsupported architecture" ;;
+	esac
+
+	url="$GH_REPO/releases/download/v${version}/topgrade-v${version}-${architecture}-${platform}.tar.gz"
 
 	echo "* Downloading $TOOL_NAME release $version..."
 	curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
@@ -61,7 +70,6 @@ install_version() {
 		mkdir -p "$install_path"
 		cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path"
 
-		# TODO: Assert topgrade executable exists.
 		local tool_cmd
 		tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
 		test -x "$install_path/$tool_cmd" || fail "Expected $install_path/$tool_cmd to be executable."
