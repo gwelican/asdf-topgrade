@@ -39,16 +39,16 @@ download_release() {
 
 	local platform
 	case "$OSTYPE" in
-		darwin*) platform="apple-darwin" ;;
-		linux*) platform="unknown-linux-musl" ;;
-		*) fail "Unsupported platform" ;;
+	darwin*) platform="apple-darwin" ;;
+	linux*) platform="unknown-linux-musl" ;;
+	*) fail "Unsupported platform" ;;
 	esac
 
 	local architecture
 	case "$(uname -m)" in
-		x86_64) architecture="x86_64" ;;
-		arm64) architecture="x86_64" ;; # no arm64 build :(
-		*) fail "Unsupported architecture" ;;
+	x86_64) architecture="x86_64" ;;
+	arm64) architecture="x86_64" ;; # no arm64 build :(
+	*) fail "Unsupported architecture" ;;
 	esac
 
 	url="$GH_REPO/releases/download/v${version}/topgrade-v${version}-${architecture}-${platform}.tar.gz"
